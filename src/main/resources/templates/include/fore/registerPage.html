@@ -1,0 +1,92 @@
+<div th:fragment="html">
+    <script>
+        $(function(){
+            var data4Vue = {
+                uri:'foreregister',
+                result: [],
+                user:{name:'', password:'', repeatpassword:''}
+            };
+            //ViewModel
+            var vue = new Vue({
+                el: '#workingArea',
+                data: data4Vue,
+                mounted:function(){
+                    linkDefaultActions();
+                },
+                methods: {
+                    register:function(){
+                        var url =  this.uri;
+                        if(0==this.user.name.length){
+                            $("span.errorMessage").html("enter one user name");
+                            $("div.registerErrorMessageDiv").css("visibility","visible");
+                            return;
+                        }
+                        if(0==this.user.password.length){
+                            $("span.errorMessage").html("Please input a password");
+                            $("div.registerErrorMessageDiv").css("visibility","visible");
+                            return;
+                        }
+                        if(0==this.user.repeatpassword.length){
+                            $("span.errorMessage").html("Please enter a duplicate password");
+                            $("div.registerErrorMessageDiv").css("visibility","visible");
+                            return;
+                        }
+                        if(this.user.password !=this.user.repeatpassword){
+                            $("span.errorMessage").html("Duplicate passwords are inconsistent");
+                            $("div.registerErrorMessageDiv").css("visibility","visible");
+                            return;
+                        }
+
+                        axios.post(url,this.user).then(function(response) {
+                            var result = response.data;
+                            if(result.code==0){
+                                location.href="registerSuccess?code="+result.code;
+                            }
+                            else{
+                                $("span.errorMessage").html(result.message);
+                                $("div.registerErrorMessageDiv").css("visibility","visible");
+                            }
+                        });
+                    }
+                }
+            });
+        })
+    </script>
+    <div class="registerDiv">
+        <div class="registerErrorMessageDiv">
+            <div class="alert alert-danger" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"></button>
+                <span class="errorMessage"></span>
+            </div>
+        </div>
+
+        <table class="registerTable" align="center">
+            <tr>
+                <td  class="registerTip registerTableLeftTD">Set member name</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="registerTableLeftTD">Login name</td>
+                <td  class="registerTableRightTD"><input v-model="user.name" placeholder="Once the member name is set successfully, it cannot be modified" > </td>
+            </tr>
+            <tr>
+                <td  class="registerTip registerTableLeftTD">Set login password</td>
+                <td  class="registerTableRightTD">Verify when logging in and protect account information</td>
+            </tr>
+            <tr>
+                <td class="registerTableLeftTD">login password</td>
+                <td class="registerTableRightTD"><input v-model="user.password"  type="password"  placeholder="Set your login password" > </td>
+            </tr>
+            <tr>
+                <td class="registerTableLeftTD">Password Confirmation</td>
+                <td class="registerTableRightTD"><input v-model="user.repeatpassword"   type="password"  placeholder="Please enter your password again" > </td>
+            </tr>
+
+            <tr>
+                <td colspan="2" class="registerButtonTD">
+                    <a @click="register"><button>submit</button></a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

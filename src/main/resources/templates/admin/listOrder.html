@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="include/admin/adminHeader::html('订单管理')" ></head>
+<body>
+<div th:replace="include/admin/adminNavigator::html" ></div>
+<script>
+    $(function () {
+        var data4Vue = {
+            uri:'orders',
+                        beans: [],
+            pagination:{}
+        }
+
+        var vue = new Vue({
+            el:"#workingArea",
+            data:data4Vue,
+            mounted:function () {
+                                this.list(0);
+            },
+            methods:{
+                list:function (start) {
+                    var url =  this.uri+ "?start="+start;
+                    axios.get(url).then(function(response) {
+                        vue.pagination = response.data;
+                        vue.beans = response.data.content;
+                    });
+                },
+                jump: function(page){
+                    jump(page,vue);
+                },
+                jumpByNumber: function(start){
+                    jumpByNumber(start,vue);
+                },
+                                showOrderItems:function(order){
+                    var id = order.id;
+                    $("#orderItemsTR"+id).show();
+                },
+                                deliveryOrder:function(order,e){
+                    var url =  "deliveryOrder/"+order.id;
+                    axios.put(url).then(function(response) {
+                        $(e.target).hide();
+                    });
+                },
+            },
+        });
+
+        Vue.filter('formatDateFilter', function (value, formatString) {
+            if(null==value)
+                return "";
+            formatString = formatString || 'YYYY-MM-DD HH:mm:ss';
+            return moment(value).format(formatString);
+        });
+
+
+    })
+
+
+
+</script>
+
+<div id="workingArea" >
+    <h1 class="label label-info" >order manager</h1>
+    <br>
+    <br>
+    <div class="listDataTableDiv">
+        <table class="table table-striped table-bordered table-hover  table-condensed">
+            <thead>
+            <tr class="success">
+                <th>status</th>
+                <th>price</th>
+                <th width="100px">count</th>
+                <th width="100px">buyer name</th>
+                <th>createtime</th>
+                <th>paytime</th>
+                <th>Delivery time</th>
+                <th>Confirm receipt time</th>
+                <th width="120px">operation</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <template v-for="bean in beans ">
+                <tr >
+                    <td>
+                        {{bean.statusDesc}}
+                    </td>
+                    <td>
+                        {{bean.total}}
+                    </td>
+                    <td>
+                        {{bean.totalNumber}}
+                    </td>
+                    <td>
+                        {{bean.user.name}}
+                    </td>
+                    <td>
+                        {{bean.createDate | formatDateFilter}}
+                    </td>
+                    <td>
+                        {{bean.payDate | formatDateFilter}}
+                    </td>
+                    <td>
+                        {{bean.deliveryDate | formatDateFilter}}
+                    </td>
+                    <td>
+                        {{bean.confirmDate | formatDateFilter}}
+                    </td>
+                    <td>
+                        <button @click="showOrderItems(bean)" class="orderPageCheckOrderItems btn btn-primary btn-xs">View details</button>
+
+                        <button v-if="bean.status=='waitDelivery'" @click="deliveryOrder(bean,$event)" class="btn btn-primary btn-xs">发货</button>
+                    </td>
+                </tr>
+                <tr class="orderPageOrderItemTR"  :id="'orderItemsTR'+bean.id">
+                    <td colspan="10" align="center">
+
+                        <div  class="orderPageOrderItem">
+                            <table width="800px" align="center" class="orderPageOrderItemTable">
+                                <tr v-for="orderItem in bean.orderItems">
+                                    <td align="left">
+                                        <img width="40px" height="40px" :src="'img/productSingle/'+orderItem.product.firstProductImage.id+'.jpg'">
+                                    </td>
+
+                                    <td>
+                                        <a :href="'product?product.id='+orderItem.product.id">
+                                            <span>{{orderItem.product.name}}</span>
+                                        </a>
+                                    </td>
+                                    <td align="right">
+
+                                        <span class="text-muted">{{orderItem.number}}个</span>
+                                    </td>
+                                    <td align="right">
+
+                                        <span class="text-muted">单价：￥{{orderItem.product.promotePrice}}</span>
+                                    </td>
+
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="include/admin/adminPage::html" ></div>
+
+</div>
+
+<div th:replace="include/admin/adminFooter::html" ></div>
+</body>
+</html>

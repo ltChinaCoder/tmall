@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:include="include/admin/adminHeader::html('产品管理')" ></head>
+<body>
+<div th:replace="include/admin/adminNavigator::html" ></div>
+<script>
+    $(function () {
+        //admin_productImage_list?pid=
+        var pid = getUrlParms("pid");
+        var data4Vue = {
+            uri:'productImages',
+            category:{},
+            product:{},
+            singleProductImages:{},
+            detailProductImages:{},
+            singleFile:'',
+            detailFile:''
+
+        };
+
+        var vue = new Vue({
+            el:"#workingArea",
+            data:data4Vue,
+            mounted:function () {
+                                this.getProduct(pid);
+
+                this.listSingles();
+
+                this.listDetails();
+            },
+
+            methods:{
+
+                getProduct:function (id) {
+
+                    var url = "products/"+id;
+                    axios.get(url).then(function(response) {
+                        console.log('----------');
+                        vue.product = response.data;
+                        vue.category = vue.product.category;
+                    })
+                },
+
+                listSingles:function () {
+                //@GetMapping("/products/{pid}/productImages")
+                    var url =  "products/"+pid+"/"+this.uri+"?type=single";
+                    axios.get(url).then(function (response) {
+                        vue.singleProductImages = response.data;
+                    })
+                },
+
+                listDetails:function () {
+                    var url =  "products/"+pid+"/"+this.uri+"?type=detail";
+                    axios.get(url).then(function (response) {
+                        console.log('data = '+response.data);
+                        vue.detailProductImages = response.data;
+                    })
+                },
+
+                addSingle:function () {
+                    if(!checkEmpty(this.singleFile, "single picture"))
+                        return;
+
+                    var url = this.uri+"?type=single&pid="+pid;
+
+
+                    var formData = new FormData();
+                    formData.append("image",this.singleFile);
+                    axios.post(url,formData).then(function (response) {
+
+                        vue.listSingles();
+                        $("#singlePic").val('');
+                        vue.singleFile = null;
+                    })
+
+                },
+                addDetail:function () {
+                    if(!checkEmpty(this.detailFile, "detail picture"))
+                        return;
+                    var url = this.uri+"?type=detail&pid="+pid;
+                    var formData = new FormData();
+                    formData.append("image", this.detailFile);
+                    axios.post(url,formData).then(function(response){
+                        alert('sadasd')
+                        vue.listDetails();
+                        $("#detailPic").val('');
+                        vue.detailFile = null;
+                    });
+                },
+
+                getSingleFile:function (evnet) {
+                    this.singleFile = event.target.files[0];
+                },
+
+                getDetailFile:function (event) {
+                    this.detailFile = event.target.files[0];
+                },
+
+                deleteBean:function (pid) {
+                    if(!checkDeleteLink())
+                        return;
+                    var url = this.uri+"/"+pid;
+                    axios.delete(url).then(function(response){
+                        vue.listSingles();
+                        vue.listDetails();
+                    });
+
+                }
+
+
+            }
+        })
+
+    })
+
+
+
+</script>
+
+<div id="workingArea" >
+    <ol class="breadcrumb">
+        <li><a href="admin_category_list">all category</a></li>
+        <li><a :href="'admin_product_list?cid='+category.id">{{category.name}}</a></li>
+        <li class="active">{{product.name}}</li>
+        <li class="active">product picture manager</li>
+    </ol>
+
+    <table class="addPictureTable" align="center">
+        <tr>
+            <td class="addPictureTableTD">
+                <div>
+                    <div class="panel panel-warning addPictureDiv">
+                        <div class="panel-heading">add product <b class="text-primary"> single </b>picture</div>
+                        <div class="panel-body">
+                            <table class="addTable">
+                                <tr>
+                                    <td>Please choose a local picture size of 400X400 is preferred</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input id="singlePic" type="file" @change="getSingleFile($event)" name="image" />
+                                    </td>
+                                </tr>
+                                <tr class="submitTR">
+                                    <td align="center">
+                                        <button type="submit" @click="addSingle" class="btn btn-success">submit</button>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <table class="table table-striped table-bordered table-hover  table-condensed">
+                        <thead>
+                        <tr class="success">
+                            <th>ID</th>
+                            <th>Product single picture thumbnail</th>
+                            <th>delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="pi in singleProductImages">
+                            <td>{{pi.id}}</td>
+                            <td>
+                                <a title="Click to view the original image" :href="'img/productSingle/'+pi.id+'.jpg'"><img height="50px" :src="'img/productSingle/'+pi.id+'.jpg'"></a>
+                            </td>
+                            <td><a href="#nowhere" @click="deleteBean(pi.id)"><span class="glyphicon glyphicon-trash"></span></a></td>
+
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </td>
+            <td class="addPictureTableTD">
+                <div>
+
+                    <div class="panel panel-warning addPictureDiv">
+                        <div class="panel-heading">add product<b class="text-primary"> detail </b>picture</div>
+                        <div class="panel-body">
+                            <table class="addTable">
+                                <tr>
+                                    <td>Please choose a local picture with a width of 790</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input id="detailPic" type="file" @change="getDetailFile($event)" name="image" />
+                                    </td>
+                                </tr>
+                                <tr class="submitTR">
+                                    <td align="center">
+                                        <button type="submit" @click="addDetail" class="btn btn-success">submit</button>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </div>
+                    </div>
+                    <table class="table table-striped table-bordered table-hover  table-condensed">
+                        <thead>
+                        <tr class="success">
+                            <th>ID</th>
+                            <th>Product details picture thumbnail</th>
+                            <th>delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="pi in detailProductImages">
+                            <td>{{pi.id}}</td>
+                            <td>
+                                <a title="Click to view the original image" :href="'img/productDetail/'+pi.id+'.jpg'"><img height="50px" :src="'img/productDetail/'+pi.id+'.jpg'"></a>
+                            </td>
+                            <td><a href="#nowhere" @click="deleteBean(pi.id)"><span class="glyphicon glyphicon-trash"></span></a></td>
+
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+<div th:replace="include/admin/adminFooter::html" ></div>
+</body>
+</html>

@@ -23,6 +23,10 @@ public class ForePageController {
     public String register() {
         return "fore/register";
     }
+    @GetMapping(value = "/introduction")
+    public String introduction() {
+        return "fore/introduction";
+    }
 
         @GetMapping(value = "/registerSuccess")
     public String registerSuccess() {

@@ -1,4 +1,4 @@
-﻿DROP DATABASE IF EXISTS tmall;
+﻿DROP DATABASE IF EXISTS tmall_springboot;
 CREATE DATABASE tmall_springboot  DEFAULT CHARACTER SET utf8;
 USE tmall_springboot;
 CREATE TABLE category (
